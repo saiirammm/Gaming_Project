@@ -1,0 +1,19 @@
+apiVersion : apps/v1
+kind: Deployment
+metadata:
+  name: saiirammmgamingproject 
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: saiirammmgamingproject
+  template:
+    metadata:
+      labels:
+        app: saiirammmgamingproject 
+    spec:
+      containers:
+        - name: saiirammmgamingproject 
+          image: tryimage.azurecr.io/saiirammmgamingproject
+          ports:
+          - containerPort: 80
