@@ -1,9 +1,20 @@
 apiVersion: apps/v1
+kind: Pod
+metadata:
+      labels:
+        app: sairam-app
+    spec:
+      containers:
+      - name: sairam-container
+        image: tryimage.azurecr.io/newimage:latest
+        ports:
+        - containerPort: 80
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: sairam-app
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app: sairam-app
@@ -17,5 +28,3 @@ spec:
         image: tryimage.azurecr.io/newimage:latest
         ports:
         - containerPort: 80
-      imagePullSecrets:
-      - name: tryimage00e2-auth
