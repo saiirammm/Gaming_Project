@@ -17,3 +17,62 @@ $agicAddonIdentity=az aks show -n aks-test -g test-aaks-module -o tsv --query "a
 
 # Assign network contributor role to AGIC addon identity to subnet that contains the Application Gateway
 az role assignment create --assignee $agicAddonIdentity --scope $appGatewaySubnetId --role "Network Contributor"
+
+
+
+pipeline {
+    agent any
+    options {
+        timestamps()
+}
+    stages {
+        stage('Git Checkout') {
+            steps {
+                checkout scmGit(branches: [[name: '*/sairam']], extensions: [], userRemoteConfigs: [[credentialsId: 'Github', url: 'https://github.com/saiirammm/Gaming_Project.git']])
+            }
+        }
+        stage('compiling the code'){
+            steps{
+                sh "mvn clean install package"
+            }
+        }
+        stage('Docker image Build and push to asr'){
+            steps{
+                withDockerRegistry(credentialsId: 'Docker-registry', url: 'https://sairamusa.azurecr.io') {
+                sh "docker build -t sairamusa.azurecr.io/project:${Build_Number} ."
+                sh "docker push sairamusa.azurecr.io/project:${Build_Number}"
+}
+                
+            }
+        }
+        stage('jumphost-K8scluster'){
+            steps{
+                sh """ 
+                az account set --subscription 0e9784a1-7ffb-4ad5-824f-2aaa98c41256 
+                az aks get-credentials --resource-group test-aaks-module --name aks-test --overwrite-existing 
+                kubectl get nodes
+                """
+            }
+        }
+        
+        stage('K8s-yaml-deployment'){
+            steps{
+                
+                sh """
+                kubectl delete deployment.apps/myapp
+                kubectl apply -f ./k8s-files/deployment.yaml
+                kubectl apply -f ./k8s-files/service.yaml
+                kubectl delete ingress web-project-ingress
+                kubectl apply -f ./k8s-files/ingress.yaml
+                """
+                
+            }
+        }
+        stage("image update"){
+            steps{
+                sh" kubectl set image deployment/myapp myapp=sairamusa.azurecr.io/project:${BUILD_NUMBER}"
+            }
+        }
+        
+    }
+}
