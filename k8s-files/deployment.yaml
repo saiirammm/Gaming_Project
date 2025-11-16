@@ -11,6 +11,8 @@ spec:
       labels:
         app: myapp
     spec:
+      imagePullSecrets:
+        - name: acr-secret
       containers:
       - name: myapp
         image: sairamusa.azurecr.io/project:9
